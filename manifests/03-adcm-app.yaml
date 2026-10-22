@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: adcm-data
+  namespace: adcm-sandbox
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adcm
+  namespace: adcm-sandbox
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+  selector:
+    app: adcm
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adcm
+  namespace: adcm-sandbox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adcm
+  template:
+    metadata:
+      labels:
+        app: adcm
+    spec:
+      containers:
+        - name: adcm-app
+          image: hub.arenadata.io/adcm/adcm:2.12
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DB_HOST
+              value: "adcm-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_NAME
+              value: "adcmdb"
+            - name: DB_PASS
+              value: "adcmpgpwd"
+          volumeMounts:
+            - mountPath: /adcm/data
+              name: adcm-storage
+            - mountPath: /var/log/adcm
+              name: log-volume
+
+      volumes:
+        - name: adcm-storage
+          persistentVolumeClaim:
+            claimName: adcm-data
