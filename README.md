@@ -67,20 +67,20 @@ Namespace `adcm-sandbox`:
 Окружение подготавливается автоматически при входе в директорию благодаря
 `direnv`:
 
-```bash
+```sh
 cd adcm-k8s-sandbox
 direnv allow
 ```
 
 *Или вручную через Nix:*
 
-```bash
+```sh
 nix develop
 ```
 
 ### 2. Запуск песочницы
 
-```bash
+```sh
 # 1. Запуск Minikube
 minikube start
 
@@ -94,13 +94,20 @@ kubectl apply -f manifests/02-postgres.yaml
 kubectl apply -f manifests/03-adcm-app.yaml
 ```
 
+И можно всё разом:
+
+``` sh
+kubectl apply -f manifests/
+```
+
+`
 ---
 
 ## 🧪 Проверка работы Sidecar и логов
 
 Чтобы убедиться, что Sidecar корректно видит и обрабатывает логи ADCM:
 
-```bash
+```sh
 # Просмотр логов Sidecar-контейнера
 kubectl logs -n adcm-sandbox -l app=adcm -c log-rotator -f
 
