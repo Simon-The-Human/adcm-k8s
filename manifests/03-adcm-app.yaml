@@ -56,8 +56,6 @@ spec:
           volumeMounts:
             - mountPath: /adcm/data
               name: adcm-storage
-            - mountPath: /var/log/adcm
-              name: log-volume
 
       volumes:
         - name: adcm-storage
