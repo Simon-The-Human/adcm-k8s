@@ -19,6 +19,60 @@
           inherit system;
           config.allowUnfree = true;
         };
+        cfg = {
+          namespace = "adcm-sandbox";
+          manifestsPath = "./manifests";
+          nodePort = "30080";
+        };
+        upScript = pkgs.writeShellApplication {
+          name = "adcm-up";
+          runtimeInputs = [
+            pkgs.minikube
+            pkgs.kubectl
+          ];
+          text = ''
+            echo "🔍 Checking Minikube status..."
+            if ! minikube status | grep -q "Running"; then
+              echo "⚙️ Starting Minikube with Docker driver..."
+              minikube start --driver=docker
+            fi
+
+            echo "📦 Applying Kubernetes manifests..."
+            kubectl apply -f manifests/
+
+            # Получаем реальный IP контейнера Minikube в сети Docker
+            MINIKUBE_IP=$(minikube ip)
+
+            echo ""
+            echo "✨ Sandbox is up and running!"
+            echo "🌐 Access ADCM via cluster network node: http://$MINIKUBE_IP:30080"
+          '';
+        };
+        downScript = pkgs.writeShellApplication {
+          name = "adcm-down";
+          runtimeInputs = [ pkgs.kubectl ];
+          text = ''
+            echo "🧹 Destroying resources in namespace ${cfg.namespace}..."
+            kubectl delete -f ${cfg.manifestsPath}/ --ignore-not-found=true
+            echo "✨ Sandbox resources cleaned up."
+          '';
+        };
+
+        # 3. Скрипт проверки статуса
+        statusScript = pkgs.writeShellApplication {
+          name = "adcm-status";
+          runtimeInputs = [
+            pkgs.minikube
+            pkgs.kubectl
+          ];
+          text = ''
+            echo "📊 Cluster Status:"
+            minikube status
+            echo ""
+            echo "📦 Pods in ${cfg.namespace}:"
+            kubectl get all -n ${cfg.namespace}
+          '';
+        };
       in
       {
         devShells.default = pkgs.mkShell {
@@ -52,6 +106,21 @@
             echo "-> kubectl: $(kubectl version --client --short 2>/dev/null || kubectl version --client)"
             echo "-> minikube: $(minikube version --short)"
           '';
+        };
+        apps = {
+          default = self.apps.${system}.up;
+          up = {
+            type = "app";
+            program = "${upScript}/bin/adcm-up";
+          };
+          down = {
+            type = "app";
+            program = "${downScript}/bin/adcm-down";
+          };
+          status = {
+            type = "app";
+            program = "${statusScript}/bin/adcm-status";
+          };
         };
       }
     );
