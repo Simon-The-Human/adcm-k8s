@@ -37,6 +37,13 @@
               minikube start --driver=docker
             fi
 
+            if ! docker image inspect adcm-log-rotator:latest >/dev/null 2>&1; then
+              echo "⚙️ adcm-log-rotator:latest image not found in Docker. Building from Dockerfile.rotator..."
+              docker build -t adcm-log-rotator:latest -f Dockerfile.rotator .
+            else
+              echo "✅ Образ adcm-log-rotator:latest exists."
+            fi
+
             echo "📦 Applying Kubernetes manifests..."
             kubectl apply -f manifests/
 
