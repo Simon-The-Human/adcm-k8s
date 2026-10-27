@@ -58,7 +58,7 @@ spec:
           volumeMounts:
             - mountPath: /adcm/data
               name: adcm-storage
-        - name: adcm-log-rotator
+        - name: log-rotator
           image: alpine:latest
           command: ["/bin/sh", "-c"]
           args:
@@ -80,6 +80,6 @@ spec:
         - name: adcm-storage
           persistentVolumeClaim:
             claimName: adcm-data
-        - name: log-rotator-config
+        - name: logrotate-config
           configMap:
             name: adcm-logrotate-config
