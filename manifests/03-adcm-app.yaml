@@ -58,8 +58,28 @@ spec:
           volumeMounts:
             - mountPath: /adcm/data
               name: adcm-storage
-
+        - name: adcm-log-rotator
+          image: alpine:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              apk add --no-cache logrotate
+              echo "🔄 Logrotate sidecar started."
+              
+              while true; do
+                # Запуск logrotate по конфигу с указанием кастомного файла состояния
+                logrotate -s /tmp/logrotate.status /etc/logrotate.d/adcm.conf
+                sleep 900
+              done
+          volumeMounts:
+            - name: adcm-storage
+              mountPath: /adcm/data
+            - name: logrotate-config
+              mountPath: /etc/logrotate.d
       volumes:
         - name: adcm-storage
           persistentVolumeClaim:
             claimName: adcm-data
+        - name: log-rotator-config
+          configMap:
+            name: adcm-logrotate-config

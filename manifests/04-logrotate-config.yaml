@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adcm-logrotate-config
+  namespace: adcm-sandbox
+data:
+  adcm.conf: |
+    /adcm/data/log/*.log
+    /adcm/data/log/nginx/*.log {
+        size 50M
+        rotate 3
+        missingok
+        notifempty
+        copytruncate
+        compress
+        delaycompress
+    }
